@@ -5,7 +5,9 @@
 // ── Command Palette (Cmd+K / Ctrl+K) ───────────────────────────────────
 const PAGES_INDEX = [
   { label: "Painel · Loja",    icon: "Home",     route: "loja/dashboard",  group: "Páginas" },
+  { label: "Catálogo",         icon: "Layers",   route: "loja/catalogo",   group: "Páginas" },
   { label: "Produtos",         icon: "Box",      route: "loja/produtos",   group: "Páginas" },
+  { label: "Serviços",         icon: "Tool",     route: "loja/servicos",   group: "Páginas" },
   { label: "Vendas",           icon: "Cart",     route: "loja/vendas",     group: "Páginas" },
   { label: "Estoque",          icon: "Pkg",      route: "loja/estoque",    group: "Páginas" },
   { label: "Painel · Orça",    icon: "Home",     route: "orca/dashboard",  group: "Páginas" },
@@ -17,10 +19,11 @@ const PAGES_INDEX = [
 ];
 
 const QUICK_ACTIONS = [
-  { label: "Cadastrar produto com IA", icon: "Sparkles", route: "loja/produtos/novo", group: "Ações rápidas", hint: "⌘N" },
-  { label: "Nova venda manual",         icon: "Cart",     route: "loja/vendas/novo",    group: "Ações rápidas" },
+  { label: "Cadastrar produto com IA",  icon: "Sparkles", route: "loja/produtos/novo",   group: "Ações rápidas", hint: "⌘N" },
+  { label: "Cadastrar serviço com IA",  icon: "Tool",     route: "loja/servicos/novo",   group: "Ações rápidas" },
+  { label: "Nova venda manual",         icon: "Cart",     route: "loja/vendas/novo",     group: "Ações rápidas" },
   { label: "Novo orçamento com IA",     icon: "FileText", route: "orca/orcamentos/novo", group: "Ações rápidas" },
-  { label: "Cadastrar cliente",         icon: "User",     route: "clientes/novo",       group: "Ações rápidas" },
+  { label: "Cadastrar cliente",         icon: "User",     route: "clientes/novo",        group: "Ações rápidas" },
 ];
 
 const CommandPalette = ({ open, onClose, navigate }) => {

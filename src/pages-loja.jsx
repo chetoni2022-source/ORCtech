@@ -322,7 +322,7 @@ const AlertRow = ({ tone, icon, title, body, action }) => {
 };
 
 // --- Produtos (lista) ---
-const LojaProdutos = ({ navigate, isMobile }) => {
+const LojaProdutos = ({ navigate, isMobile, embedded = false }) => {
   const [search, setSearch] = React.useState("");
   const [filter, setFilter] = React.useState("Todos");
   const filtered = PRODUCTS.filter(p => {
@@ -332,20 +332,21 @@ const LojaProdutos = ({ navigate, isMobile }) => {
     return true;
   });
 
-  return (
-    <div className="page">
-      <div className="page-head">
-        <div>
-          <h1 className="t-h1">Produtos</h1>
-          <p>{PRODUCTS.length} produtos · publicados em 4 canais</p>
+  const inner = (<>
+      {!embedded && (
+        <div className="page-head">
+          <div>
+            <h1 className="t-h1">Produtos</h1>
+            <p>{PRODUCTS.length} produtos · publicados em 4 canais</p>
+          </div>
+          <div className="row-wrap">
+            <Button variant="secondary" icon={<I.Upload size={16}/>}>Importar</Button>
+            <Button variant="primary" icon={<I.Plus size={16}/>} onClick={() => navigate("loja/produtos/novo")}>
+              Novo produto
+            </Button>
+          </div>
         </div>
-        <div className="row-wrap">
-          <Button variant="secondary" icon={<I.Upload size={16}/>}>Importar</Button>
-          <Button variant="primary" icon={<I.Plus size={16}/>} onClick={() => navigate("loja/produtos/novo")}>
-            Novo produto
-          </Button>
-        </div>
-      </div>
+      )}
 
       <div className="card" style={{ padding: 0 }}>
         <div style={{ padding: 16, display: "flex", gap: 12, flexWrap: "wrap", borderBottom: "1px solid var(--border)" }}>
@@ -454,8 +455,9 @@ const LojaProdutos = ({ navigate, isMobile }) => {
           )
         )}
       </div>
-    </div>
-  );
+    </>);
+
+  return embedded ? inner : <div className="page">{inner}</div>;
 };
 
 // --- Novo produto (com IA) ---
@@ -844,4 +846,373 @@ const LojaEstoque = ({ navigate, isMobile }) => {
   );
 };
 
-Object.assign(window, { LojaDashboard, LojaProdutos, LojaNovoProduto, LojaVendas, LojaEstoque });
+// --- Serviços (catálogo) ---
+const LojaServicos = ({ navigate, isMobile, embedded = false }) => {
+  const [search, setSearch] = React.useState("");
+  const [filter, setFilter] = React.useState("Todos");
+  const cats = ["Todos", ...Array.from(new Set(SERVICES.map(s => s.category)))];
+  const filtered = SERVICES.filter(s => {
+    if (filter !== "Todos" && s.category !== filter) return false;
+    if (search && !s.name.toLowerCase().includes(search.toLowerCase()) && !s.code.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  const inner = (<>
+      {!embedded && (
+        <div className="page-head">
+          <div>
+            <h1 className="t-h1">Serviços</h1>
+            <p>{SERVICES.length} serviços cadastrados · usados em vendas e orçamentos</p>
+          </div>
+          <div className="row-wrap">
+            <Button variant="secondary" icon={<I.Upload size={16}/>}>Importar</Button>
+            <Button variant="primary" icon={<I.Plus size={16}/>} onClick={() => navigate("loja/servicos/novo")}>
+              Novo serviço
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="card" style={{ padding: 0 }}>
+        <div style={{ padding: 16, display: "flex", gap: 12, flexWrap: "wrap", borderBottom: "1px solid var(--border)" }}>
+          <div className="input-icon-wrap grow" style={{ maxWidth: 360, minWidth: 200 }}>
+            <span className="input-icon"><I.Search size={16}/></span>
+            <input className="input" placeholder="Buscar por nome ou código…" value={search} onChange={e => setSearch(e.target.value)}/>
+          </div>
+          <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
+            {cats.map(f => (
+              <Pill key={f} on={filter === f}>
+                <span onClick={() => setFilter(f)}>{f}</span>
+              </Pill>
+            ))}
+          </div>
+        </div>
+
+        {isMobile ? (
+          <div className="col" style={{ gap: 0 }}>
+            {filtered.length === 0 ? (
+              <EmptyState icon={<I.Tool size={26}/>}
+                          title={search ? "Nada encontrado" : "Nenhum serviço cadastrado"}
+                          body={search ? "Tente outro termo ou limpe o filtro." : "Cadastre os serviços que você presta. Reutilize em vendas e orçamentos."}
+                          action={search
+                            ? <Button variant="secondary" size="sm" onClick={() => { setSearch(""); setFilter("Todos"); }}>Limpar busca</Button>
+                            : <Button variant="primary" icon={<I.Sparkles size={14}/>} onClick={() => navigate("loja/servicos/novo")}>Cadastrar com IA</Button>}/>
+            ) : filtered.map(s => (
+              <button key={s.id} className="row" onClick={() => {}}
+                      style={{ padding: 14, gap: 12, background: "transparent", border: 0, borderBottom: "1px solid var(--border)", width: "100%", textAlign: "left", cursor: "pointer", fontFamily: "inherit", color: "inherit" }}>
+                <div style={{ width: 44, height: 44, borderRadius: 8, background: "var(--bg-sunken)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--tech-deep)", flexShrink: 0 }}>
+                  {React.createElement(I[s.icon] || I.Tool, { size: 20 })}
+                </div>
+                <div className="grow" style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>{s.name}</div>
+                  <div className="row" style={{ gap: 8, marginTop: 4 }}>
+                    <span className="num t-caption t-muted">{s.code}</span>
+                    <span className="t-caption t-muted">·</span>
+                    <span className="t-caption t-muted">{s.duration} min</span>
+                  </div>
+                </div>
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <div className="num" style={{ fontWeight: 600, fontSize: 14, color: "var(--text)" }}>{fmtBRL(s.price)}</div>
+                  <div className="t-caption t-muted">{s.sold30d} no mês</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          filtered.length === 0 ? (
+            <EmptyState icon={<I.Tool size={26}/>}
+                        title={search ? "Nada encontrado" : "Nenhum serviço cadastrado"}
+                        body={search ? "Tente outro termo ou limpe o filtro." : "Cadastre os serviços que você presta. Reutilize em vendas e orçamentos sem digitar tudo de novo."}
+                        action={search
+                          ? <Button variant="secondary" onClick={() => { setSearch(""); setFilter("Todos"); }}>Limpar busca</Button>
+                          : <Button variant="primary" icon={<I.Sparkles size={14}/>} onClick={() => navigate("loja/servicos/novo")}>Cadastrar com IA</Button>}/>
+          ) : (
+          <div className="tbl-wrap">
+            <table className="tbl">
+              <colgroup>
+                <col style={{ minWidth: 220 }}/>
+                <col style={{ width: 110 }}/>
+                <col style={{ width: 160 }}/>
+                <col style={{ width: 90 }}/>
+                <col style={{ width: 110 }}/>
+                <col style={{ width: 110 }}/>
+                <col style={{ width: 48 }}/>
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Serviço</th>
+                  <th className="nowrap tbl-hide-md">Código</th>
+                  <th className="tbl-hide-md">Categoria</th>
+                  <th className="num" style={{ textAlign: "right" }}>Duração</th>
+                  <th className="num" style={{ textAlign: "right" }}>Preço</th>
+                  <th>Status</th>
+                  <th className="tbl-hide-md"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(s => (
+                  <tr key={s.id} className="row-hover">
+                    <td>
+                      <div className="row" style={{ gap: 12 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 8, background: "var(--bg-sunken)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--tech-deep)", flexShrink: 0 }}>
+                          {React.createElement(I[s.icon] || I.Tool, { size: 18 })}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, lineHeight: 1.3 }}>{s.name}</div>
+                          <div className="t-caption t-muted">{s.category} · garantia {s.warranty}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="mono nowrap tbl-hide-md" style={{ fontSize: 12, color: "var(--text-muted)" }}>{s.code}</td>
+                    <td className="tbl-hide-md t-muted" style={{ fontSize: 13 }}>{s.category}</td>
+                    <td className="num" style={{ textAlign: "right", color: "var(--text-muted)" }}>{s.duration} min</td>
+                    <td className="num" style={{ textAlign: "right", fontWeight: 600 }}>{fmtBRL(s.price)}<span className="t-caption t-faint" style={{ display: "block", fontWeight: 400 }}>/ {s.unit}</span></td>
+                    <td className="nowrap"><Badge tone={statusTone(s.status)} dot>{s.status}</Badge></td>
+                    <td className="tbl-hide-md"><button className="btn btn-secondary btn-icon btn-sm"><I.More size={16}/></button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          )
+        )}
+      </div>
+    </>);
+
+  return embedded ? inner : <div className="page">{inner}</div>;
+};
+
+// --- Novo serviço (com IA) ---
+const LojaNovoServico = ({ navigate, isMobile, onToast }) => {
+  const [step, setStep] = React.useState(1);
+  const [name, setName] = React.useState("");
+  const [desc, setDesc] = React.useState("");
+  const [price, setPrice] = React.useState("");
+  const [duration, setDuration] = React.useState("60");
+  const [category, setCategory] = React.useState("");
+  const [unit, setUnit] = React.useState("serviço");
+  const [warranty, setWarranty] = React.useState("90 dias");
+  const [materials, setMaterials] = React.useState([]);
+  const [transcript, setTranscript] = React.useState("Troca de tela de iPhone 13. Cliente espera no balcão, fazemos em até 1h. Usa tela compatível AAA e cola B-7000. Cobramos R$ 580 e damos 90 dias de garantia.");
+
+  const generate = () => {
+    setStep(2);
+    setTimeout(() => {
+      setName("Troca de tela iPhone 13");
+      setDesc("Substituição de tela LCD/touch em iPhone 13 com tela compatível AAA. Inclui calibração, teste de touch e selagem. Garantia de 90 dias contra defeito de fabricação.");
+      setPrice("580.00");
+      setDuration("60");
+      setCategory("Reparo celular");
+      setUnit("serviço");
+      setWarranty("90 dias");
+      setMaterials(["Tela compatível AAA", "Cola B-7000", "Adesivo de selagem"]);
+      setStep(3);
+    }, 1700);
+  };
+
+  const save = () => {
+    onToast("Serviço criado no catálogo");
+    setTimeout(() => navigate("loja/servicos"), 600);
+  };
+
+  return (
+    <div className="page" style={{ maxWidth: 960 }}>
+      <div className="row" style={{ marginBottom: 8 }}>
+        <button className="btn btn-ghost btn-sm" onClick={() => navigate("loja/servicos")}>
+          <I.ChevLeft size={14}/> Serviços
+        </button>
+      </div>
+      <h1 className="t-h1" style={{ marginBottom: 4 }}>Novo serviço</h1>
+      <p className="t-muted" style={{ marginBottom: 24 }}>Cadastre uma vez. Reutilize em vendas e orçamentos sem refazer.</p>
+
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 320px", gap: 16 }}>
+        <div className="card">
+          <div className="field" style={{ marginBottom: 16 }}>
+            <label className="field-label">Descreva o serviço</label>
+            <textarea className="textarea" rows={4} value={transcript} onChange={e => setTranscript(e.target.value)}/>
+            <div className="between" style={{ marginTop: 6 }}>
+              <span className="field-hint">Texto livre. A IA extrai nome, categoria, preço, duração e materiais.</span>
+              <button className="btn btn-ghost btn-sm" style={{ padding: 0, height: "auto" }}>
+                <I.Phone size={12}/> Gravar áudio
+              </button>
+            </div>
+          </div>
+
+          <Button variant="primary" icon={step === 2 ? <I.Refresh size={16} className="spin"/> : <I.Sparkles size={16}/>} onClick={generate} disabled={step === 2}>
+            {step === 1 && "Preencher com IA"}
+            {step === 2 && "Analisando…"}
+            {step === 3 && "Refazer com IA"}
+          </Button>
+
+          <div className="divider" style={{ margin: "20px 0" }}/>
+
+          {step === 1 && (
+            <div className="empty">
+              <I.Wand size={28}/>
+              <div style={{ fontWeight: 600, color: "var(--text)" }}>Aguardando IA</div>
+              <div className="t-caption" style={{ maxWidth: 320 }}>Descreva o serviço em texto livre. A IA preenche nome, categoria, duração, preço e materiais.</div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="col" style={{ gap: 14 }}>
+              <div className="row" style={{ gap: 10, padding: "12px 14px", background: "var(--tech-soft)", borderRadius: 10 }}>
+                <I.Sparkles size={16} style={{ color: "var(--tech-deep)" }} className="pulse"/>
+                <span className="t-body" style={{ fontWeight: 600 }}>Identificando serviço, materiais e duração…</span>
+              </div>
+              <div className="skel" style={{ height: 14, width: "40%" }}/>
+              <div className="skel" style={{ height: 14, width: "70%" }}/>
+              <div className="skel" style={{ height: 14, width: "55%" }}/>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="col" style={{ gap: 16 }}>
+              <div className="ia-chip"><I.Sparkles size={12}/>Gerado pela IA · revise antes de salvar</div>
+              <div className="field">
+                <label className="field-label">Nome do serviço</label>
+                <input className="input" value={name} onChange={e => setName(e.target.value)}/>
+              </div>
+              <div className="field">
+                <label className="field-label">Descrição</label>
+                <textarea className="textarea" value={desc} onChange={e => setDesc(e.target.value)} rows={3}/>
+                <span className="field-hint">Aparece no orçamento e no recibo do cliente.</span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr", gap: 12 }}>
+                <div className="field">
+                  <label className="field-label">Preço</label>
+                  <input className="input mono" value={price} onChange={e => setPrice(e.target.value)}/>
+                </div>
+                <div className="field">
+                  <label className="field-label">Duração (min)</label>
+                  <input className="input mono" value={duration} onChange={e => setDuration(e.target.value)}/>
+                </div>
+                <div className="field">
+                  <label className="field-label">Unidade</label>
+                  <select className="input" value={unit} onChange={e => setUnit(e.target.value)}>
+                    <option value="serviço">serviço</option>
+                    <option value="hora">hora</option>
+                    <option value="visita">visita</option>
+                    <option value="m²">m²</option>
+                  </select>
+                </div>
+                <div className="field">
+                  <label className="field-label">Categoria</label>
+                  <input className="input" value={category} onChange={e => setCategory(e.target.value)}/>
+                </div>
+                <div className="field">
+                  <label className="field-label">Garantia</label>
+                  <input className="input" value={warranty} onChange={e => setWarranty(e.target.value)}/>
+                </div>
+              </div>
+              <div className="field">
+                <label className="field-label">Materiais incluídos</label>
+                <div className="row-wrap" style={{ gap: 6 }}>
+                  {materials.map(m => (
+                    <span key={m} className="badge badge-neutral" style={{ height: 26, padding: "0 10px" }}>
+                      {m}
+                      <button onClick={() => setMaterials(materials.filter(x => x !== m))} style={{ marginLeft: 4, border: 0, background: "transparent", padding: 0, cursor: "pointer", color: "inherit", display: "flex" }}>
+                        <I.X size={12}/>
+                      </button>
+                    </span>
+                  ))}
+                  <button className="btn btn-secondary btn-sm" style={{ height: 26, padding: "0 10px" }}>
+                    <I.Plus size={12}/> material
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar — disponibilidade */}
+        <div className="col" style={{ gap: 16 }}>
+          <div className="card">
+            <SectionHead title="Onde será usado"/>
+            <div className="col" style={{ gap: 10 }}>
+              {[
+                { name: "Vendas (Loja)",       hint: "Cliente paga e leva no balcão" },
+                { name: "Orçamentos (Orça)",    hint: "Inclui na proposta enviada por WhatsApp" },
+                { name: "Agenda",              hint: "Aparece para agendamento" },
+              ].map(c => (
+                <div key={c.name} className="between">
+                  <div>
+                    <div style={{ fontWeight: 500, fontSize: 14 }}>{c.name}</div>
+                    <div className="t-caption t-faint">{c.hint}</div>
+                  </div>
+                  <button className="switch on"/>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="card">
+            <SectionHead title="Sugestão de preço da IA"/>
+            <div className="mono" style={{ fontSize: 22, fontWeight: 600 }}>{step === 3 ? "R$ 580,00" : "—"}</div>
+            <div className="t-caption t-muted" style={{ marginTop: 4 }}>
+              Faixa do mercado: <span className="mono">R$ 480–650</span><br/>
+              Margem prevista: <span className="mono" style={{ color: "var(--tech-deep)", fontWeight: 600 }}>52%</span>
+            </div>
+          </div>
+
+          <div className="col" style={{ gap: 8 }}>
+            <Button variant="primary" fullWidth icon={<I.Check size={16}/>} onClick={save} disabled={step !== 3}>
+              Salvar no catálogo
+            </Button>
+            <Button variant="secondary" fullWidth onClick={() => navigate("loja/servicos")}>Cancelar</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Catálogo unificado (segmento híbrido) ---
+const LojaCatalogo = ({ navigate, isMobile }) => {
+  const [tab, setTab] = React.useState("produtos");
+
+  return (
+    <div className="page">
+      <div className="page-head">
+        <div>
+          <h1 className="t-h1">Catálogo</h1>
+          <p>Produtos e serviços que você vende. Mesmos itens aparecem nas vendas e orçamentos.</p>
+        </div>
+        <div className="row-wrap">
+          {tab === "produtos"
+            ? <Button variant="primary" icon={<I.Plus size={16}/>} onClick={() => navigate("loja/produtos/novo")}>Novo produto</Button>
+            : <Button variant="primary" icon={<I.Plus size={16}/>} onClick={() => navigate("loja/servicos/novo")}>Novo serviço</Button>}
+        </div>
+      </div>
+
+      <div className="row" style={{ gap: 6, marginBottom: 16, borderBottom: "1px solid var(--border)" }}>
+        {[
+          { k: "produtos", label: "Produtos", count: PRODUCTS.length, icon: "Box" },
+          { k: "servicos", label: "Serviços", count: SERVICES.length, icon: "Tool" },
+        ].map(t => {
+          const on = tab === t.k;
+          return (
+            <button key={t.k} onClick={() => setTab(t.k)}
+                    style={{
+                      padding: "10px 14px", border: 0, background: "transparent",
+                      borderBottom: "2px solid " + (on ? "var(--tech)" : "transparent"),
+                      color: on ? "var(--text)" : "var(--text-muted)",
+                      fontWeight: on ? 600 : 500, fontSize: 14, cursor: "pointer",
+                      display: "flex", gap: 8, alignItems: "center", marginBottom: -1,
+                      fontFamily: "inherit",
+                    }}>
+              {React.createElement(I[t.icon], { size: 16 })}
+              {t.label}
+              <span className="badge-count">{t.count}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {tab === "produtos" && <LojaProdutos navigate={navigate} isMobile={isMobile} embedded/>}
+      {tab === "servicos" && <LojaServicos navigate={navigate} isMobile={isMobile} embedded/>}
+    </div>
+  );
+};
+
+Object.assign(window, { LojaDashboard, LojaProdutos, LojaNovoProduto, LojaServicos, LojaNovoServico, LojaCatalogo, LojaVendas, LojaEstoque });

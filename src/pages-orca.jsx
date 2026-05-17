@@ -345,23 +345,38 @@ const OrcaPreview = ({ orcamento, onClose }) => {
 const OrcaNovoOrcamento = ({ navigate, isMobile, onToast }) => {
   const [step, setStep] = React.useState(1);
   const [transcript, setTranscript] = React.useState("Cliente trouxe um VW Polo 2021 com a porta traseira esquerda amassada e arranhada por causa de um portão. Quer só funilaria e pintura, sem mexer no interior. Falou que precisa pra próxima semana.");
+  // Cada item pode estar vinculado a um serviço do catálogo (serviceId).
+  // Quando ia=true e serviceId=null, é texto solto sugerido pela IA — mostra CTA "salvar no catálogo".
   const [items, setItems] = React.useState([]);
   const [client, setClient] = React.useState("");
   const [vehicle, setVehicle] = React.useState("");
+  const [pickerOpen, setPickerOpen] = React.useState(false);
 
   const generate = () => {
     setStep(2);
     setTimeout(() => {
       setClient("Marta Schneider");
       setVehicle("VW Polo 2021 · placa ABC-1234");
+      // IA mapeia a transcrição pra serviços do catálogo (SRV-0505 = funilaria/hora).
+      // Itens sem serviceId são propostas novas — viram CTA "salvar".
+      const funilaria = SERVICES.find(s => s.code === "SRV-0505");
       setItems([
-        { desc: "Mão de obra · funilaria porta TE", qty: 6, unit: 120.00, ia: true },
-        { desc: "Tinta automotiva (litro)",         qty: 1, unit: 280.00, ia: true },
-        { desc: "Massa plástica + lixa",            qty: 1, unit: 95.00,  ia: true },
-        { desc: "Verniz alta resistência",          qty: 1, unit: 145.00, ia: true },
+        { serviceId: funilaria?.id, desc: funilaria?.name || "Mão de obra · funilaria porta TE", qty: 6, unit: funilaria?.price || 120.00, ia: true },
+        { serviceId: null, desc: "Tinta automotiva (litro)", qty: 1, unit: 280.00, ia: true },
+        { serviceId: null, desc: "Massa plástica + lixa",    qty: 1, unit: 95.00,  ia: true },
+        { serviceId: null, desc: "Verniz alta resistência",  qty: 1, unit: 145.00, ia: true },
       ]);
       setStep(3);
     }, 1800);
+  };
+
+  const addFromCatalog = (svc) => {
+    setItems([...items, { serviceId: svc.id, desc: svc.name, qty: 1, unit: svc.price, ia: false }]);
+    setPickerOpen(false);
+  };
+  const saveItemToCatalog = (idx) => {
+    setItems(items.map((it, i) => i === idx ? { ...it, serviceId: `s_new_${Date.now()}` } : it));
+    onToast("Item salvo no catálogo");
   };
 
   const total = items.reduce((s, i) => s + i.qty * i.unit, 0);
@@ -437,22 +452,47 @@ const OrcaNovoOrcamento = ({ navigate, isMobile, onToast }) => {
               </div>
 
               <div>
-                <label className="field-label" style={{ marginBottom: 8, display: "block" }}>Itens</label>
+                <div className="between" style={{ marginBottom: 8 }}>
+                  <label className="field-label">Itens</label>
+                  <span className="t-caption t-faint">
+                    {items.filter(i => i.serviceId).length} do catálogo · {items.filter(i => !i.serviceId).length} novos
+                  </span>
+                </div>
                 <div className="col" style={{ gap: 8 }}>
-                  {items.map((it, i) => (
-                    <div key={i} className="row" style={{ gap: 8, padding: 10, border: "1px solid var(--border)", borderRadius: 8, background: "var(--bg-elev)" }}>
-                      {it.ia && <I.Sparkles size={14} style={{ color: "var(--tech)" }} title="Sugerido pela IA"/>}
-                      <input className="input" defaultValue={it.desc} style={{ flex: 1, height: 32, border: 0, padding: 0, background: "transparent" }}/>
-                      <input className="input mono" defaultValue={it.qty} style={{ width: 50, height: 32, textAlign: "center", padding: "0 4px" }}/>
-                      <span className="t-faint">×</span>
-                      <input className="input mono" defaultValue={it.unit.toFixed(2)} style={{ width: 80, height: 32, textAlign: "right", padding: "0 8px" }}/>
-                      <button className="btn btn-secondary btn-icon btn-sm" onClick={() => setItems(items.filter((_, idx) => idx !== i))}>
-                        <I.Trash size={14}/>
-                      </button>
-                    </div>
-                  ))}
-                  <button className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }}>
-                    <I.Plus size={14}/> Adicionar item
+                  {items.map((it, i) => {
+                    const fromCatalog = !!it.serviceId;
+                    return (
+                      <div key={i} className="col" style={{ gap: 6, padding: 10, border: "1px solid " + (fromCatalog ? "var(--border)" : "var(--warning-soft)"), borderRadius: 8, background: "var(--bg-elev)" }}>
+                        <div className="row" style={{ gap: 8 }}>
+                          {fromCatalog
+                            ? <I.Layers size={14} style={{ color: "var(--tech-deep)" }} title="Do catálogo"/>
+                            : it.ia
+                              ? <I.Sparkles size={14} style={{ color: "var(--tech)" }} title="Sugerido pela IA"/>
+                              : <I.Edit size={14} style={{ color: "var(--text-muted)" }} title="Item livre"/>}
+                          <input className="input" defaultValue={it.desc} style={{ flex: 1, height: 32, border: 0, padding: 0, background: "transparent" }}/>
+                          <input className="input mono" defaultValue={it.qty} style={{ width: 50, height: 32, textAlign: "center", padding: "0 4px" }}/>
+                          <span className="t-faint">×</span>
+                          <input className="input mono" defaultValue={it.unit.toFixed(2)} style={{ width: 80, height: 32, textAlign: "right", padding: "0 8px" }}/>
+                          <button className="btn btn-secondary btn-icon btn-sm" onClick={() => setItems(items.filter((_, idx) => idx !== i))}>
+                            <I.Trash size={14}/>
+                          </button>
+                        </div>
+                        {!fromCatalog && (
+                          <div className="between" style={{ paddingLeft: 22 }}>
+                            <span className="t-caption" style={{ color: "var(--warning)" }}>
+                              <I.Warn size={11} style={{ verticalAlign: "middle", marginRight: 4 }}/>
+                              Item livre · não está no catálogo
+                            </span>
+                            <button className="btn btn-ghost btn-sm" style={{ padding: 0, height: "auto", color: "var(--tech-deep)" }} onClick={() => saveItemToCatalog(i)}>
+                              <I.Plus size={12}/> Salvar no catálogo
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  <button className="btn btn-secondary btn-sm" style={{ alignSelf: "flex-start" }} onClick={() => setPickerOpen(true)}>
+                    <I.Layers size={14}/> Adicionar do catálogo
                   </button>
                 </div>
               </div>
@@ -491,7 +531,70 @@ const OrcaNovoOrcamento = ({ navigate, isMobile, onToast }) => {
           </div>
         </div>
       </div>
+
+      {pickerOpen && (
+        <CatalogPicker
+          isMobile={isMobile}
+          existingIds={items.map(i => i.serviceId).filter(Boolean)}
+          onPick={addFromCatalog}
+          onClose={() => setPickerOpen(false)}
+          onCreate={() => { setPickerOpen(false); navigate("loja/servicos/novo"); }}
+        />
+      )}
     </div>
+  );
+};
+
+// Catálogo picker — selector usado pelo Orça pra puxar serviços já cadastrados
+const CatalogPicker = ({ isMobile, existingIds = [], onPick, onClose, onCreate }) => {
+  const [q, setQ] = React.useState("");
+  const filtered = SERVICES.filter(s =>
+    !existingIds.includes(s.id) &&
+    (s.name.toLowerCase().includes(q.toLowerCase()) || s.category.toLowerCase().includes(q.toLowerCase()))
+  );
+
+  return (
+    <Modal open={true} onClose={onClose} title="Adicionar do catálogo" width={520}>
+      <div className="col" style={{ gap: 12 }}>
+        <div className="input-icon-wrap">
+          <span className="input-icon"><I.Search size={16}/></span>
+          <input className="input" autoFocus placeholder="Buscar serviço por nome ou categoria…" value={q} onChange={e => setQ(e.target.value)}/>
+        </div>
+
+        <div className="col" style={{ gap: 4, maxHeight: 360, overflow: "auto", margin: "0 -4px" }}>
+          {filtered.length === 0 ? (
+            <div className="empty" style={{ padding: "24px 12px" }}>
+              <I.Tool size={26}/>
+              <div style={{ fontWeight: 600, color: "var(--text)" }}>Nenhum serviço no catálogo</div>
+              <div className="t-caption" style={{ maxWidth: 320 }}>Cadastre um serviço novo pra reutilizar em orçamentos futuros.</div>
+            </div>
+          ) : filtered.map(s => (
+            <button key={s.id} onClick={() => onPick(s)}
+                    className="row" style={{
+                      padding: 10, gap: 12, border: 0, background: "transparent",
+                      borderRadius: 8, cursor: "pointer", textAlign: "left",
+                      fontFamily: "inherit", color: "inherit", width: "100%",
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = "var(--bg-sunken)"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--bg-sunken)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--tech-deep)", flexShrink: 0 }}>
+                {React.createElement(I[s.icon] || I.Tool, { size: 16 })}
+              </div>
+              <div className="grow" style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>{s.name}</div>
+                <div className="t-caption t-muted">{s.category} · {s.duration} min</div>
+              </div>
+              <div className="mono" style={{ fontWeight: 600, fontSize: 14 }}>{fmtBRL(s.price)}</div>
+            </button>
+          ))}
+        </div>
+
+        <div className="between" style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+          <Button variant="ghost" icon={<I.Plus size={14}/>} onClick={onCreate}>Cadastrar novo</Button>
+          <Button variant="secondary" onClick={onClose}>Fechar</Button>
+        </div>
+      </div>
+    </Modal>
   );
 };
 

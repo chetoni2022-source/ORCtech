@@ -1,16 +1,9 @@
 // Sidebar, TopBar, MobileTabBar, ModuleSwitcher
 // Routes are simple string keys. App holds state and passes navigate().
 
-// nav config per module
-const NAV_LOJA = [
-  { key: "loja/dashboard",  label: "Painel",      icon: "Home" },
-  { key: "loja/produtos",   label: "Produtos",    icon: "Box", count: 8 },
-  { key: "loja/vendas",     label: "Vendas",      icon: "Cart", count: 6 },
-  { key: "loja/estoque",    label: "Estoque",     icon: "Pkg" },
-  { key: "clientes",        label: "Clientes",    icon: "Users" },
-  { key: "analises",        label: "Análises",    icon: "Chart" },
-];
-
+// nav config per module — adapts to the customer's business segment.
+// Segment ortogonal ao plano: varejo só produtos, servicos só serviços,
+// hibrido tem ambos (e mostra "Catálogo" unificado).
 const NAV_ORCA = [
   { key: "orca/dashboard",  label: "Painel",      icon: "Home" },
   { key: "orca/orcamentos", label: "Orçamentos",  icon: "FileText", count: 7 },
@@ -23,16 +16,51 @@ const NAV_BOTTOM = [
   { key: "configuracoes", label: "Configurações", icon: "Settings" },
 ];
 
-function getNav(module) {
-  return module === "orca" ? NAV_ORCA : NAV_LOJA;
+function getNavLoja(segment) {
+  if (segment === "servicos") {
+    return [
+      { key: "loja/dashboard", label: "Painel",   icon: "Home" },
+      { key: "loja/servicos",  label: "Serviços", icon: "Tool", count: 8 },
+      { key: "loja/vendas",    label: "Vendas",   icon: "Cart", count: 6 },
+      { key: "loja/agenda",    label: "Agenda",   icon: "Calendar", count: 5 },
+      { key: "clientes",       label: "Clientes", icon: "Users" },
+      { key: "analises",       label: "Análises", icon: "Chart" },
+    ];
+  }
+  if (segment === "hibrido") {
+    return [
+      { key: "loja/dashboard", label: "Painel",   icon: "Home" },
+      { key: "loja/catalogo",  label: "Catálogo", icon: "Layers", count: 16 },
+      { key: "loja/vendas",    label: "Vendas",   icon: "Cart", count: 6 },
+      { key: "loja/estoque",   label: "Estoque",  icon: "Pkg" },
+      { key: "loja/agenda",    label: "Agenda",   icon: "Calendar", count: 5 },
+      { key: "clientes",       label: "Clientes", icon: "Users" },
+      { key: "analises",       label: "Análises", icon: "Chart" },
+    ];
+  }
+  // varejo (default)
+  return [
+    { key: "loja/dashboard", label: "Painel",   icon: "Home" },
+    { key: "loja/produtos",  label: "Produtos", icon: "Box", count: 8 },
+    { key: "loja/vendas",    label: "Vendas",   icon: "Cart", count: 6 },
+    { key: "loja/estoque",   label: "Estoque",  icon: "Pkg" },
+    { key: "clientes",       label: "Clientes", icon: "Users" },
+    { key: "analises",       label: "Análises", icon: "Chart" },
+  ];
+}
+
+function getNav(module, segment = "varejo") {
+  return module === "orca" ? NAV_ORCA : getNavLoja(segment);
 }
 
 // Sidebar (desktop)
-const Sidebar = ({ route, navigate, module, setModule, onLogout, plan = "combo" }) => {
-  const items = getNav(module);
+const Sidebar = ({ route, navigate, module, setModule, onLogout, plan = "combo", segment = "varejo" }) => {
+  const items = getNav(module, segment);
   const isActive = (key) => {
     if (key === route) return true;
     if (key === "clientes" && route.startsWith("clientes")) return true;
+    // Catálogo "ativo" também em sub-rotas de produtos/serviços (segmento híbrido)
+    if (key === "loja/catalogo" && (route === "loja/produtos" || route === "loja/servicos")) return true;
     return false;
   };
   return (
@@ -198,8 +226,8 @@ const TopBar = ({ route, navigate, isMobile, openNotifications, openSearch, them
 };
 
 // Mobile bottom tab bar — first 4 nav items of current module + more
-const MobileTabBar = ({ route, navigate, module }) => {
-  const items = getNav(module).slice(0, 4);
+const MobileTabBar = ({ route, navigate, module, segment = "varejo" }) => {
+  const items = getNav(module, segment).slice(0, 4);
   return (
     <nav className="tabbar">
       {items.map(it => {
@@ -219,9 +247,9 @@ const MobileTabBar = ({ route, navigate, module }) => {
 };
 
 // Mobile slide-in nav drawer
-const MobileMenu = ({ open, onClose, route, navigate, module, setModule, theme, setTheme, onLogout, plan = "combo" }) => {
+const MobileMenu = ({ open, onClose, route, navigate, module, setModule, theme, setTheme, onLogout, plan = "combo", segment = "varejo" }) => {
   if (!open) return null;
-  const items = [...getNav(module), ...NAV_BOTTOM];
+  const items = [...getNav(module, segment), ...NAV_BOTTOM];
   return (
     <div onClick={onClose} style={{ position: "absolute", inset: 0, zIndex: 80, background: "rgba(10,10,10,0.5)" }}>
       <aside onClick={e => e.stopPropagation()}
@@ -261,11 +289,15 @@ const MobileMenu = ({ open, onClose, route, navigate, module, setModule, theme, 
 function getBreadcrumb(route) {
   const map = {
     "loja/dashboard":        ["ORCtech Loja", "Painel"],
+    "loja/catalogo":         ["ORCtech Loja", "Catálogo"],
     "loja/produtos":         ["ORCtech Loja", "Produtos"],
     "loja/produtos/novo":    ["ORCtech Loja", "Produtos", "Novo produto"],
+    "loja/servicos":         ["ORCtech Loja", "Serviços"],
+    "loja/servicos/novo":    ["ORCtech Loja", "Serviços", "Novo serviço"],
     "loja/vendas":           ["ORCtech Loja", "Vendas"],
     "loja/vendas/novo":      ["ORCtech Loja", "Vendas", "Nova venda"],
     "loja/estoque":          ["ORCtech Loja", "Estoque"],
+    "loja/agenda":           ["ORCtech Loja", "Agenda"],
     "orca/dashboard":        ["ORCtech Orça", "Painel"],
     "orca/orcamentos":       ["ORCtech Orça", "Orçamentos"],
     "orca/orcamentos/novo":  ["ORCtech Orça", "Orçamentos", "Novo orçamento"],

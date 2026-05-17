@@ -324,4 +324,104 @@ const SSOIcon = ({ kind }) => {
   return null;
 };
 
-window.LoginScreen = LoginScreen;
+// — Onboarding de segmento — primeira tela após signup
+// Determina se o cliente vê Produtos, Serviços ou Catálogo (híbrido).
+// Pode ser alterado depois em Configurações.
+const SegmentOnboarding = ({ isMobile, onChoose }) => {
+  const [selected, setSelected] = React.useState(null);
+
+  const options = [
+    {
+      k: "varejo",
+      icon: "Box",
+      title: "Vendo produtos",
+      desc: "Roupas, eletrônicos, cosméticos, alimentos… qualquer coisa que tenha estoque.",
+      examples: "Boutique · Mercadinho · Loja online",
+    },
+    {
+      k: "servicos",
+      icon: "Tool",
+      title: "Presto serviços",
+      desc: "Reparos, instalações, atendimentos. Sem estoque de produtos pra revender.",
+      examples: "Oficina · Salão · Eletricista · TI",
+    },
+    {
+      k: "hibrido",
+      icon: "Layers",
+      title: "Vendo produtos e presto serviços",
+      desc: "Sua loja vende e também presta serviços. Quer gerenciar os dois num lugar só.",
+      examples: "Loja de celular com assistência · Ótica · Pet shop",
+    },
+  ];
+
+  const padding = isMobile ? "40px 20px" : "48px 56px";
+  const cardGrid = isMobile ? "1fr" : "repeat(3, 1fr)";
+
+  return (
+    <div style={{
+      height: "100%", background: "var(--bg)", overflow: "auto",
+      display: "flex", flexDirection: "column", padding,
+    }}>
+      <Logo size={20}/>
+
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", maxWidth: 920, width: "100%", margin: "0 auto" }}>
+        <div style={{ marginBottom: isMobile ? 24 : 36 }}>
+          <h1 className="t-h1" style={{ marginBottom: 8, fontSize: isMobile ? 24 : 32 }}>
+            Bem-vindo à ORCtech 👋
+          </h1>
+          <p className="t-body t-muted" style={{ maxWidth: 560 }}>
+            Antes de começar, conta pra gente: qual o tipo do seu negócio? Vamos preparar a plataforma do jeito certo pra você.
+          </p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: cardGrid, gap: 16, marginBottom: 24 }}>
+          {options.map(o => {
+            const on = selected === o.k;
+            return (
+              <button key={o.k} onClick={() => setSelected(o.k)}
+                      style={{
+                        textAlign: "left", padding: 20, borderRadius: 14,
+                        border: "1.5px solid " + (on ? "var(--tech)" : "var(--border)"),
+                        background: on ? "var(--tech-soft)" : "var(--bg-elev)",
+                        cursor: "pointer", fontFamily: "inherit", color: "inherit",
+                        transition: "border-color 140ms ease, background 140ms ease",
+                        display: "flex", flexDirection: "column", gap: 10,
+                        position: "relative",
+                      }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 10,
+                  background: on ? "var(--tech)" : "var(--bg-sunken)",
+                  color: on ? "#fff" : "var(--tech-deep)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "background 140ms ease",
+                }}>
+                  {React.createElement(I[o.icon], { size: 22 })}
+                </div>
+                <div style={{ fontWeight: 700, fontSize: 16, color: "var(--text)" }}>{o.title}</div>
+                <div className="t-caption t-muted" style={{ lineHeight: 1.5 }}>{o.desc}</div>
+                <div className="t-caption t-faint" style={{ marginTop: "auto", paddingTop: 8, borderTop: "1px solid var(--border)" }}>
+                  Ex.: {o.examples}
+                </div>
+                {on && (
+                  <I.Check size={14} style={{
+                    position: "absolute", top: 14, right: 14,
+                    color: "var(--tech)",
+                  }}/>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="row" style={{ gap: 12, alignItems: "center" }}>
+          <Button variant="primary" disabled={!selected} onClick={() => selected && onChoose(selected)} icon={<I.Check size={16}/>}>
+            Continuar
+          </Button>
+          <span className="t-caption t-muted">Você pode trocar depois em Configurações.</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+Object.assign(window, { LoginScreen, SegmentOnboarding });

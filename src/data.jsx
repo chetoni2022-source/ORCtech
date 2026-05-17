@@ -31,6 +31,20 @@ const CUSTOMERS = [
   { id: "c_207", name: "Larissa Bittencourt",email: "lari.b@email.com",          phone: "(41) 99178-3325", city: "Curitiba, PR",   orders: 9,  total: 1742.00, lastOrder: "1 sem",  tag: "Recorrente" },
 ];
 
+// — Catálogo de serviços (compartilhado entre Loja e Orça) —
+// Itens cadastrados uma única vez. Loja-segmento-serviços vende direto;
+// Loja-híbrido lista junto aos produtos; Orça monta orçamentos a partir daqui.
+const SERVICES = [
+  { id: "s_501", code: "SRV-0501", name: "Troca de tela iPhone 13",       category: "Reparo celular",    price: 580.00, duration: 60,  unit: "serviço", materials: ["Tela compatível AAA", "Cola B-7000"], status: "Ativo", icon: "Tool",  sold30d: 14, warranty: "90 dias" },
+  { id: "s_502", code: "SRV-0502", name: "Troca de bateria iPhone",       category: "Reparo celular",    price: 240.00, duration: 30,  unit: "serviço", materials: ["Bateria original recondicionada"], status: "Ativo", icon: "Zap",   sold30d: 22, warranty: "180 dias" },
+  { id: "s_503", code: "SRV-0503", name: "Formatação + backup Android",   category: "Reparo celular",    price: 120.00, duration: 45,  unit: "serviço", materials: [], status: "Ativo", icon: "Refresh", sold30d: 9, warranty: "30 dias" },
+  { id: "s_504", code: "SRV-0504", name: "Reparo placa-mãe (diagnóstico)", category: "Reparo avançado",  price: 90.00,  duration: 30,  unit: "serviço", materials: [], status: "Ativo", icon: "Tool",  sold30d: 11, warranty: "30 dias" },
+  { id: "s_505", code: "SRV-0505", name: "Mão de obra · funilaria (hora)", category: "Funilaria",       price: 120.00, duration: 60,  unit: "hora",    materials: [], status: "Ativo", icon: "Tool",  sold30d: 18, warranty: "60 dias" },
+  { id: "s_506", code: "SRV-0506", name: "Troca de pastilhas de freio",   category: "Mecânica",          price: 280.00, duration: 45,  unit: "serviço", materials: ["Pastilha dianteira par"], status: "Ativo", icon: "Tool",  sold30d: 7, warranty: "90 dias" },
+  { id: "s_507", code: "SRV-0507", name: "Troca de óleo + filtro",        category: "Mecânica",          price: 180.00, duration: 30,  unit: "serviço", materials: ["Óleo 5W30 (4L)", "Filtro de óleo"], status: "Ativo", icon: "Refresh", sold30d: 24, warranty: "—" },
+  { id: "s_508", code: "SRV-0508", name: "Instalação ar split 9-12k BTU", category: "Climatização",     price: 680.00, duration: 180, unit: "serviço", materials: ["Vácuo na linha", "Suporte parede"], status: "Ativo", icon: "Tool", sold30d: 5, warranty: "6 meses" },
+];
+
 // — Orça —
 const ORCAMENTOS = [
   { id: "o_30214", client: "André Marinho",   service: "Troca de pastilhas + óleo motor", vehicle: "Honda Civic 2019", total: 920.00, status: "Aprovado",    sent: "14:02", validUntil: "20/05", channel: "WhatsApp" },
@@ -67,7 +81,7 @@ const fmtBRL = (n) => "R$ " + new Intl.NumberFormat("pt-BR", { minimumFractionDi
 const fmtInt = (n) => new Intl.NumberFormat("pt-BR").format(n);
 
 Object.assign(window, {
-  PRODUCTS, SALES_TODAY, CUSTOMERS, ORCAMENTOS, AGENDA_HOJE,
+  PRODUCTS, SERVICES, SALES_TODAY, CUSTOMERS, ORCAMENTOS, AGENDA_HOJE,
   VENDAS_7D, ORCAS_7D, NOTIFICATIONS,
   fmtBRL, fmtInt,
 });
