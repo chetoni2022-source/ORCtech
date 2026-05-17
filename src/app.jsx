@@ -1,15 +1,10 @@
 // ORCtech app — routes, layout, dual-viewport wrapper
 // Renders both desktop and mobile artboards side-by-side on the same page.
 
-function AppInstance({ isMobile, theme, density, plan, setPlan, segment, setSegment, sessionId }) {
+function AppInstance({ isMobile, theme, density, plan, setPlan, sessionId }) {
   const [route, setRoute] = React.useState("loja/dashboard");
   const [module, setModule] = React.useState("loja");
   const [authed, setAuthed] = React.useState(true);
-  // Onboarding: cliente novo escolhe segmento antes de cair no dashboard.
-  // No protótipo, o tweak `segment` define o estado inicial — só pede onboarding
-  // se o cliente "não definiu" (segment === "unset"), simulando primeiro login.
-  const [onboarded, setOnboarded] = React.useState(segment !== "unset");
-  React.useEffect(() => { setOnboarded(segment !== "unset"); }, [segment]);
   const [mobileMenu, setMobileMenu] = React.useState(false);
   const [notifsOpen, setNotifsOpen] = React.useState(false);
   const [orcamentoPreview, setOrcamentoPreview] = React.useState(null);
@@ -68,20 +63,12 @@ function AppInstance({ isMobile, theme, density, plan, setPlan, segment, setSegm
     );
   }
 
-  if (!onboarded) {
-    return (
-      <div className={`app-root ${theme === "dark" ? "theme-dark" : ""} density-${density}`} style={{ position: "relative", height: "100%", overflow: "hidden" }}>
-        <SegmentOnboarding isMobile={isMobile} onChoose={(s) => { setSegment(s); setOnboarded(true); }}/>
-      </div>
-    );
-  }
-
   // Locked module — show upsell
   if ((module === "orca" && !moduleAvailable("orca")) || (module === "loja" && !moduleAvailable("loja"))) {
     return (
       <div className={`app-root ${theme === "dark" ? "theme-dark" : ""} density-${density}`} style={{ position: "relative", height: "100%", overflow: "hidden" }}>
         <div className={`app-shell ${isMobile ? "mobile" : ""} density-${density}`}>
-          {!isMobile && <Sidebar route={route} navigate={navigate} module={module} setModule={(m) => { if (moduleAvailable(m)) setModule(m); }} onLogout={onLogout} plan={plan} segment={segment}/>}
+          {!isMobile && <Sidebar route={route} navigate={navigate} module={module} setModule={(m) => { if (moduleAvailable(m)) setModule(m); }} onLogout={onLogout} plan={plan}/>}
           <TopBar route={route} navigate={navigate} isMobile={isMobile}
                   openNotifications={() => setNotifsOpen(true)}
                   openMobileMenu={() => setMobileMenu(true)}
@@ -90,7 +77,7 @@ function AppInstance({ isMobile, theme, density, plan, setPlan, segment, setSegm
             <BlockedModule navigate={navigate} isMobile={isMobile} module={module}
                            onContract={() => { setPlan("combo"); onToast("Trial ativado · 14 dias grátis"); }}/>
           </main>
-          {isMobile && <MobileTabBar route={route} navigate={navigate} module={module} plan={plan} segment={segment}/>}
+          {isMobile && <MobileTabBar route={route} navigate={navigate} module={module} plan={plan}/>}
         </div>
       </div>
     );
@@ -104,16 +91,12 @@ function AppInstance({ isMobile, theme, density, plan, setPlan, segment, setSegm
     page = <CustomerDetail navigate={navigate} isMobile={isMobile} customerId={customerId} module={module}/>;
   } else {
     switch (route) {
-      case "loja/dashboard":       page = <LojaDashboard navigate={navigate} isMobile={isMobile} segment={segment}/>; break;
-      case "loja/catalogo":        page = <LojaCatalogo  navigate={navigate} isMobile={isMobile}/>; break;
+      case "loja/dashboard":       page = <LojaDashboard navigate={navigate} isMobile={isMobile}/>; break;
       case "loja/produtos":        page = <LojaProdutos  navigate={navigate} isMobile={isMobile}/>; break;
       case "loja/produtos/novo":   page = <LojaNovoProduto navigate={navigate} isMobile={isMobile} onToast={onToast}/>; break;
-      case "loja/servicos":        page = <LojaServicos  navigate={navigate} isMobile={isMobile}/>; break;
-      case "loja/servicos/novo":   page = <LojaNovoServico navigate={navigate} isMobile={isMobile} onToast={onToast}/>; break;
-      case "loja/vendas":          page = <LojaVendas    navigate={navigate} isMobile={isMobile} segment={segment}/>; break;
+      case "loja/vendas":          page = <LojaVendas    navigate={navigate} isMobile={isMobile}/>; break;
       case "loja/vendas/novo":     page = <NovaVenda     navigate={navigate} isMobile={isMobile} onToast={onToast} askConfirm={askConfirm}/>; break;
       case "loja/estoque":         page = <LojaEstoque   navigate={navigate} isMobile={isMobile}/>; break;
-      case "loja/agenda":          page = <OrcaAgenda    navigate={navigate} isMobile={isMobile}/>; break;
       case "orca/dashboard":       page = <OrcaDashboard navigate={navigate} isMobile={isMobile}/>; break;
       case "orca/orcamentos":      page = <OrcaOrcamentos navigate={navigate} isMobile={isMobile} onOpenPreview={setOrcamentoPreview}/>; break;
       case "orca/orcamentos/novo": page = <OrcaNovoOrcamento navigate={navigate} isMobile={isMobile} onToast={onToast}/>; break;
@@ -122,7 +105,7 @@ function AppInstance({ isMobile, theme, density, plan, setPlan, segment, setSegm
       case "clientes/novo":        page = <NovoCliente   navigate={navigate} isMobile={isMobile} onToast={onToast}/>; break;
       case "relatorios":           page = <Analises      navigate={navigate} isMobile={isMobile} module={module}/>; break;
       case "analises":             page = <Analises      navigate={navigate} isMobile={isMobile} module={module}/>; break;
-      case "configuracoes":        page = <Configuracoes navigate={navigate} isMobile={isMobile} theme={theme} setTheme={setThemeShared} density={density} setDensity={(d) => window.parent.postMessage({ type: "__edit_mode_set_keys", edits: { density: d } }, "*")} plan={plan} setPlan={setPlan} segment={segment} setSegment={setSegment} onLogout={onLogout}/>; break;
+      case "configuracoes":        page = <Configuracoes navigate={navigate} isMobile={isMobile} theme={theme} setTheme={setThemeShared} density={density} setDensity={(d) => window.parent.postMessage({ type: "__edit_mode_set_keys", edits: { density: d } }, "*")} plan={plan} setPlan={setPlan} onLogout={onLogout}/>; break;
       default:                     page = <LojaDashboard navigate={navigate} isMobile={isMobile}/>;
     }
   }
@@ -130,13 +113,8 @@ function AppInstance({ isMobile, theme, density, plan, setPlan, segment, setSegm
   // Decide FAB action per route (mobile only)
   const fabAction = (() => {
     if (route === "loja/produtos")  return { icon: <I.Plus size={22}/>, onClick: () => navigate("loja/produtos/novo"),    label: "Novo produto" };
-    if (route === "loja/servicos")  return { icon: <I.Plus size={22}/>, onClick: () => navigate("loja/servicos/novo"),    label: "Novo serviço" };
-    if (route === "loja/catalogo")  return { icon: <I.Plus size={22}/>, onClick: () => navigate(segment === "varejo" ? "loja/produtos/novo" : "loja/servicos/novo"), label: segment === "varejo" ? "Novo produto" : "Novo item" };
     if (route === "loja/vendas")    return { icon: <I.Plus size={22}/>, onClick: () => navigate("loja/vendas/novo"),      label: "Nova venda" };
-    if (route === "loja/dashboard") {
-      if (segment === "servicos") return { icon: <I.Plus size={22}/>, onClick: () => navigate("loja/servicos/novo"), label: "Novo serviço" };
-      return { icon: <I.Plus size={22}/>, onClick: () => navigate("loja/produtos/novo"), label: "Novo produto" };
-    }
+    if (route === "loja/dashboard") return { icon: <I.Plus size={22}/>, onClick: () => navigate("loja/produtos/novo"),    label: "Novo produto" };
     if (route === "orca/orcamentos")return { icon: <I.Plus size={22}/>, onClick: () => navigate("orca/orcamentos/novo"),  label: "Novo orçamento" };
     if (route === "orca/dashboard") return { icon: <I.Plus size={22}/>, onClick: () => navigate("orca/orcamentos/novo"),  label: "Novo orçamento" };
     if (route === "clientes")       return { icon: <I.Plus size={22}/>, onClick: () => navigate("clientes/novo"),         label: "Novo cliente" };
@@ -146,7 +124,7 @@ function AppInstance({ isMobile, theme, density, plan, setPlan, segment, setSegm
   return (
     <div className={`app-root ${theme === "dark" ? "theme-dark" : ""} density-${density}`} style={{ position: "relative", height: "100%", overflow: "hidden" }}>
       <div className={`app-shell ${isMobile ? "mobile" : ""} density-${density}`}>
-        {!isMobile && <Sidebar route={route} navigate={navigate} module={module} setModule={setModule} onLogout={onLogout} plan={plan} segment={segment}/>}
+        {!isMobile && <Sidebar route={route} navigate={navigate} module={module} setModule={setModule} onLogout={onLogout} plan={plan}/>}
         <TopBar route={route} navigate={navigate} isMobile={isMobile}
                 openNotifications={() => setNotifsOpen(true)}
                 openMobileMenu={() => setMobileMenu(true)}
@@ -156,7 +134,7 @@ function AppInstance({ isMobile, theme, density, plan, setPlan, segment, setSegm
         <main className="app-content">
           {page}
         </main>
-        {isMobile && <MobileTabBar route={route} navigate={navigate} module={module} segment={segment}/>}
+        {isMobile && <MobileTabBar route={route} navigate={navigate} module={module}/>}
       </div>
 
       <NotificationsPanel open={notifsOpen} onClose={() => setNotifsOpen(false)}/>
@@ -165,7 +143,7 @@ function AppInstance({ isMobile, theme, density, plan, setPlan, segment, setSegm
 
       {isMobile && <MobileMenu open={mobileMenu} onClose={() => setMobileMenu(false)}
                                 route={route} navigate={navigate} module={module} setModule={setModule}
-                                theme={theme} setTheme={setThemeShared} onLogout={onLogout} plan={plan} segment={segment}/>}
+                                theme={theme} setTheme={setThemeShared} onLogout={onLogout} plan={plan}/>}
 
       {/* Mobile FAB — page-specific */}
       {isMobile && fabAction && (
@@ -196,8 +174,7 @@ function ORCtechStage() {
     "theme": "dark",
     "density": "default",
     "show": "both",
-    "plan": "combo",
-    "segment": "hibrido"
+    "plan": "combo"
   }/*EDITMODE-END*/;
   const [t, setTweak] = useTweaks(TWEAKS_DEFAULTS);
 
@@ -205,8 +182,6 @@ function ORCtechStage() {
   const density = t.density;
   const plan = t.plan || "combo";
   const setPlan = (p) => setTweak("plan", p);
-  const segment = t.segment || "hibrido";
-  const setSegment = (s) => setTweak("segment", s);
   const showDesktop = t.show !== "mobile";
   const showMobile  = t.show !== "desktop";
 
@@ -229,7 +204,7 @@ function ORCtechStage() {
         <div style={{ flex: showMobile ? "1 1 980px" : "1 1 1200px", maxWidth: 1240, minWidth: 0 }}>
           <FrameLabel label="Desktop" sub="1280 × 820"/>
           <DeviceFrame width="100%" height={820} ratio={1280}>
-            <AppInstance isMobile={false} theme={theme} density={density} plan={plan} setPlan={setPlan} segment={segment} setSegment={setSegment} sessionId="desk"/>
+            <AppInstance isMobile={false} theme={theme} density={density} plan={plan} setPlan={setPlan} sessionId="desk"/>
           </DeviceFrame>
         </div>
       )}
@@ -237,7 +212,7 @@ function ORCtechStage() {
         <div style={{ flex: "0 0 auto" }}>
           <FrameLabel label="Mobile" sub="390 × 820"/>
           <PhoneFrame>
-            <AppInstance isMobile={true} theme={theme} density={density} plan={plan} setPlan={setPlan} segment={segment} setSegment={setSegment} sessionId="mob"/>
+            <AppInstance isMobile={true} theme={theme} density={density} plan={plan} setPlan={setPlan} sessionId="mob"/>
           </PhoneFrame>
         </div>
       )}
@@ -255,15 +230,6 @@ function ORCtechStage() {
                          { value: "combo", label: "Loja + Orça (Combo)" },
                          { value: "loja",  label: "Apenas Loja" },
                          { value: "orca",  label: "Apenas Orça" },
-                       ]}/>
-        </TweakSection>
-        <TweakSection label="Segmento do cliente">
-          <TweakSelect label="Tipo de negócio" value={segment} onChange={v => setTweak("segment", v)}
-                       options={[
-                         { value: "varejo",   label: "Varejo (só produtos)" },
-                         { value: "servicos", label: "Serviços (só serviços)" },
-                         { value: "hibrido",  label: "Híbrido (produtos + serviços)" },
-                         { value: "unset",    label: "Novo cliente (onboarding)" },
                        ]}/>
         </TweakSection>
         <TweakSection label="Mostrar">

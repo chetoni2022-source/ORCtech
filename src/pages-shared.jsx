@@ -203,12 +203,11 @@ const Relatorios = ({ navigate, isMobile, module }) => {
 };
 
 // --- Configurações ---
-const Configuracoes = ({ navigate, isMobile, theme, setTheme, density, setDensity, segment = "varejo", setSegment, onLogout }) => {
+const Configuracoes = ({ navigate, isMobile, theme, setTheme, density, setDensity, onLogout }) => {
   const [section, setSection] = React.useState("perfil");
   const sections = [
     { k: "perfil",       label: "Perfil",          icon: "User" },
     { k: "empresa",      label: "Empresa",         icon: "Building" },
-    { k: "segmento",     label: "Segmento",        icon: "Briefcase" },
     { k: "aparencia",    label: "Aparência",       icon: "Sliders" },
     { k: "integracoes",  label: "Integrações",     icon: "Globe" },
     { k: "plano",        label: "Plano e cobrança",icon: "Money" },
@@ -341,75 +340,6 @@ const Configuracoes = ({ navigate, isMobile, theme, setTheme, density, setDensit
                   <UsageBar label="Produtos cadastrados" value={184} max={500}/>
                   <UsageBar label="Gerações com IA" value={341} max={1000}/>
                   <UsageBar label="Orçamentos enviados" value={84} max={200}/>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {section === "segmento" && (
-            <div className="col" style={{ gap: 16 }}>
-              <div className="card">
-                <SectionHead title="Tipo de negócio" hint="Define o que aparece na Loja"/>
-                <p className="t-caption t-muted" style={{ marginBottom: 16 }}>
-                  Trocar o segmento muda a navegação do módulo Loja e o que pode ser cadastrado. Os itens já cadastrados continuam disponíveis.
-                </p>
-                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 12 }}>
-                  {[
-                    { k: "varejo",   icon: "Box",    title: "Varejo",   desc: "Vendo produtos" },
-                    { k: "servicos", icon: "Tool",   title: "Serviços", desc: "Presto serviços" },
-                    { k: "hibrido",  icon: "Layers", title: "Híbrido",  desc: "Produtos + serviços" },
-                  ].map(o => {
-                    const on = segment === o.k;
-                    return (
-                      <button key={o.k} onClick={() => setSegment && setSegment(o.k)}
-                              style={{
-                                textAlign: "left", padding: 14, borderRadius: 10,
-                                border: "1.5px solid " + (on ? "var(--tech)" : "var(--border)"),
-                                background: on ? "var(--tech-soft)" : "var(--bg-elev)",
-                                cursor: "pointer", fontFamily: "inherit", color: "inherit",
-                                display: "flex", flexDirection: "column", gap: 8,
-                              }}>
-                        <div className="row" style={{ gap: 10, alignItems: "center" }}>
-                          <div style={{
-                            width: 32, height: 32, borderRadius: 8,
-                            background: on ? "var(--tech)" : "var(--bg-sunken)",
-                            color: on ? "#fff" : "var(--tech-deep)",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                          }}>
-                            {React.createElement(I[o.icon], { size: 16 })}
-                          </div>
-                          <div style={{ fontWeight: 600 }}>{o.title}</div>
-                          {on && <I.Check size={14} style={{ marginLeft: "auto", color: "var(--tech)" }}/>}
-                        </div>
-                        <div className="t-caption t-muted">{o.desc}</div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="card" style={{ background: "var(--bg-sunken)" }}>
-                <SectionHead title="O que muda" hint="Pré-visualização do impacto"/>
-                <div className="col" style={{ gap: 8 }}>
-                  {segment === "varejo" && (
-                    <>
-                      <div className="row" style={{ gap: 8 }}><I.Check size={14} style={{ color: "var(--tech)" }}/><span className="t-caption">Sidebar mostra <strong>Produtos</strong>, <strong>Vendas</strong>, <strong>Estoque</strong></span></div>
-                      <div className="row" style={{ gap: 8 }}><I.X size={14} style={{ color: "var(--text-faint)" }}/><span className="t-caption t-muted">Sem cadastro de serviços nem agenda</span></div>
-                    </>
-                  )}
-                  {segment === "servicos" && (
-                    <>
-                      <div className="row" style={{ gap: 8 }}><I.Check size={14} style={{ color: "var(--tech)" }}/><span className="t-caption">Sidebar mostra <strong>Serviços</strong>, <strong>Vendas</strong>, <strong>Agenda</strong></span></div>
-                      <div className="row" style={{ gap: 8 }}><I.Check size={14} style={{ color: "var(--tech)" }}/><span className="t-caption">Catálogo de serviços compartilhado com Orçamentos (Orça)</span></div>
-                      <div className="row" style={{ gap: 8 }}><I.X size={14} style={{ color: "var(--text-faint)" }}/><span className="t-caption t-muted">Sem cadastro de produtos nem estoque</span></div>
-                    </>
-                  )}
-                  {segment === "hibrido" && (
-                    <>
-                      <div className="row" style={{ gap: 8 }}><I.Check size={14} style={{ color: "var(--tech)" }}/><span className="t-caption">Sidebar mostra <strong>Catálogo</strong> (produtos + serviços), <strong>Estoque</strong> e <strong>Agenda</strong></span></div>
-                      <div className="row" style={{ gap: 8 }}><I.Check size={14} style={{ color: "var(--tech)" }}/><span className="t-caption">Mesmos serviços valem em Loja, Vendas e Orçamentos — cadastra uma vez só</span></div>
-                    </>
-                  )}
                 </div>
               </div>
             </div>
